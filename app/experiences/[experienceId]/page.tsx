@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { whopsdk } from "@/lib/whop-sdk";
-import WelcomeClient from "./experiences/[experienceId]/WelcomeClient";
+import WelcomeClient from "./WelcomeClient";
 
 const PRODUCTS: Record<string, string> = {
   free: "prod_OVVaWf1nemJrp",
@@ -12,7 +12,12 @@ const PRODUCTS: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-export default async function RootPage() {
+export default async function ExperiencePage({
+  params,
+}: {
+  params: Promise<{ experienceId: string }>;
+}) {
+  const { experienceId } = await params;
   const headersList = await headers();
 
   let access = {
@@ -29,7 +34,8 @@ export default async function RootPage() {
       dontThrow: true,
     });
 
-    console.log("[RWTW-ROOT] userId:", userId);
+    console.log("[RWTW] userId:", userId);
+    console.log("[RWTW] experienceId:", experienceId);
 
     if (userId) {
       authenticated = true;
@@ -40,10 +46,10 @@ export default async function RootPage() {
             const response = await whopsdk.users.checkAccess(prodId, {
               id: userId,
             });
-            console.log(`[RWTW-ROOT] ${key}:`, JSON.stringify(response));
+            console.log(`[RWTW] ${key} (${prodId}):`, JSON.stringify(response));
             return [key, response.has_access === true] as [string, boolean];
           } catch (e) {
-            console.error(`[RWTW-ROOT] Error checking ${key}:`, e);
+            console.error(`[RWTW] Error checking ${key}:`, e);
             return [key, false] as [string, boolean];
           }
         })
@@ -52,8 +58,10 @@ export default async function RootPage() {
       access = Object.fromEntries(results) as typeof access;
     }
   } catch (e) {
-    console.error("[RWTW-ROOT] Auth error:", e);
+    console.error("[RWTW] Auth error:", e);
   }
+
+  console.log("[RWTW] Final access:", JSON.stringify(access));
 
   return <WelcomeClient access={access} authenticated={authenticated} />;
 }

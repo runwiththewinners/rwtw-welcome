@@ -1,1 +1,22 @@
-module.exports = { async headers() { return [{ source: "/:path*", headers: [{ key: "X-Frame-Options", value: "ALLOWALL" }, { key: "Content-Security-Policy", value: "frame-ancestors *;" }, { key: "Cache-Control", value: "no-store, must-revalidate" }] }] } };
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "ALLOWALL",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *;",
+          },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
