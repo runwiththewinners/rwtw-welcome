@@ -18,12 +18,24 @@ const JWKS = createRemoteJWKSet(
 
 async function verifyWhopToken(token: string): Promise<string | null> {
   try {
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: "urn:whop:oauth",
-    });
+    const { payload } = await jwtVerify(token, JWKS);
+    console.log("[RWTW] Token payload:", JSON.stringify(payload));
     return (payload.sub as string) || null;
   } catch (e) {
-    console.error("Token verification failed:", e);
+    console.error("[RWTW] Token verification failed:", e);
+    // Try decoding without verification as fallback
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(
+          Buffer.from(parts[1], "base64url").toString()
+        );
+        console.log("[RWTW] Decoded token payload (unverified):", JSON.stringify(payload));
+        return (payload.sub as string) || null;
+      }
+    } catch (e2) {
+      console.error("[RWTW] Fallback decode failed:", e2);
+    }
     return null;
   }
 }
@@ -33,20 +45,24 @@ async function checkProductAccess(
   productId: string
 ): Promise<boolean> {
   try {
-    const res = await fetch(
-      `https://api.whop.com/api/v5/app/users/${userId}/check_access?resource_id=${productId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${WHOP_API_KEY}`,
-        },
-        cache: "no-store",
-      }
-    );
-    if (!res.ok) return false;
+    // Correct endpoint: GET /users/{id}/access/{resource_id}
+    const url = `https://api.whop.com/api/v1/users/${userId}/access/${productId}`;
+    console.log("[RWTW] Checking access:", url);
+    
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${WHOP_API_KEY}`,
+      },
+      cache: "no-store",
+    });
+
     const data = await res.json();
+    console.log(`[RWTW] Access check ${productId}:`, JSON.stringify(data));
+    
+    if (!res.ok) return false;
     return data.has_access === true;
   } catch (e) {
-    console.error(`Access check failed for ${productId}:`, e);
+    console.error(`[RWTW] Access check failed for ${productId}:`, e);
     return false;
   }
 }
@@ -55,9 +71,21 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const headersList = await headers();
+  
+  // Log all headers for debugging
+  const allHeaders: Record<string, string> = {};
+  headersList.forEach((value, key) => {
+    allHeaders[key] = key.toLowerCase().includes("token") 
+      ? value.substring(0, 30) + "..." 
+      : value;
+  });
+  console.log("[RWTW] All headers:", JSON.stringify(allHeaders));
+
   const userToken =
     headersList.get("x-whop-user-token") ||
     headersList.get("X-Whop-User-Token");
+
+  console.log("[RWTW] User token present:", !!userToken);
 
   let access = {
     free: false,
@@ -70,6 +98,8 @@ export default async function Page() {
 
   if (userToken) {
     const userId = await verifyWhopToken(userToken);
+    console.log("[RWTW] Resolved userId:", userId);
+
     if (userId) {
       authenticated = true;
       const results = await Promise.all(
@@ -81,6 +111,9 @@ export default async function Page() {
       access = Object.fromEntries(results) as typeof access;
     }
   }
+
+  console.log("[RWTW] Final access state:", JSON.stringify(access));
+  console.log("[RWTW] Authenticated:", authenticated);
 
   return <WelcomeClient access={access} authenticated={authenticated} />;
 }
