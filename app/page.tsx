@@ -25,10 +25,12 @@ export default async function RootPage() {
   let authenticated = false;
 
   try {
-    const { userId } = await whopsdk.verifyUserToken(headersList, {
+    const result = await whopsdk.verifyUserToken(headersList, {
       dontThrow: true,
     });
+    const userId = (result as any)?.userId ?? null;
 
+    console.log("[RWTW-ROOT] verifyResult:", JSON.stringify(result));
     console.log("[RWTW-ROOT] userId:", userId);
 
     if (userId) {
