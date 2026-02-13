@@ -1,7 +1,6 @@
 "use client";
 
 interface AccessState {
-  free: boolean;
   maxbet: boolean;
   premium: boolean;
   props: boolean;
@@ -33,7 +32,6 @@ export default function WelcomeClient({
           </div>
           <div className="divider" />
           <div className="tiers">
-            <TierCard icon="🆓" label="FREE" tierClass="tier-free" description={<>You&apos;re here. You&apos;re in the building. Every week you&apos;ll get <strong>1–2 free plays</strong> on us.</>} subscribed={access.free} authenticated={authenticated} />
             <TierCard icon="🔥" label="MAX BET PLAY OF THE DAY" tierClass="tier-maxbet" priceTag="$49.99 One-Time" description={<>Our highest-conviction, most researched pick of the day. One play. Max confidence.</>} subscribed={access.maxbet} authenticated={authenticated} checkoutUrl={CHECKOUT_URLS.maxbet} btnClass="btn-maxbet" btnText="GET MAX BET — $49.99" />
             <TierCard icon="💎" label="PREMIUM" tierClass="tier-premium" priceTag="Starting at $29.99" description={<>This is where the real action is. You get <strong>ALL daily plays</strong> PLUS the <strong>Max Bet Play Of The Day included every single day</strong> — that&apos;s a $49.99/day pick built into your sub.</>} prices={["$29.99 / 2 Days","$59.99 / Week","$119.99 / Month","$279.99 / 3 Months","$1,999.99 / Lifetime"]} subscribed={access.premium} authenticated={authenticated} checkoutUrl={CHECKOUT_URLS.premium} btnClass="btn-premium" btnText="JOIN PREMIUM" />
             <TierCard icon="🎯" label="PLAYER PROPS" tierClass="tier-props" priceTag="Starting at $9.99" description={<>Brand new. <strong>Daily player prop picks</strong> with full analysis. If you&apos;re a props bettor, this is your lane.</>} prices={["$9.99 / Day","$29.99 / Week","$59.99 / Month"]} subscribed={access.props} authenticated={authenticated} checkoutUrl={CHECKOUT_URLS.props} btnClass="btn-props" btnText="JOIN PLAYER PROPS" />

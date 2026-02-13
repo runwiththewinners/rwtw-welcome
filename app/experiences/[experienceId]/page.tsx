@@ -3,7 +3,6 @@ import { whopsdk } from "@/lib/whop-sdk";
 import WelcomeClient from "./WelcomeClient";
 
 const PRODUCTS: Record<string, string> = {
-  free: "prod_OVVaWf1nemJrp",
   maxbet: "prod_12U89lKiPpVxP",
   premium: "prod_o1jjamUG8rP8W",
   props: "prod_RYRii4L26sK9m",
@@ -21,7 +20,6 @@ export default async function ExperiencePage({
   const headersList = await headers();
 
   let access = {
-    free: false,
     maxbet: false,
     premium: false,
     props: false,
