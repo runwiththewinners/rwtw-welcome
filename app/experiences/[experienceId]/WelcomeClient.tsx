@@ -282,7 +282,7 @@ const styles = `
 
 /* === Vars === */
 :root{
-  --bg:#07080c;
+  --bg:#000000;
   --gold:#d4a843;--gold-hi:#f0c95c;--gold-lo:#a07c2e;
   --fire:#e8522a;--fire-hi:#ff7043;
   --blue:#4ea8f6;--blue-hi:#6dc0ff;
