@@ -344,7 +344,7 @@ const styles = `
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 
 .hero-logo{
-  width:clamp(140px,30vw,220px)!important;height:auto!important;
+  width:clamp(100px,22vw,160px)!important;height:auto!important;
   margin-bottom:24px;
   filter:drop-shadow(0 0 30px rgba(212,168,67,.2));
   animation:fadeUp .7s ease .05s both;
