@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 
 interface AccessState {
   maxbet: boolean;
@@ -120,15 +119,6 @@ export default function WelcomeClient({
               <span className="badge-dot" />
               Live Picks Daily
             </div>
-            <Image
-              src="/logo.png"
-              alt=""
-              width={220}
-              height={220}
-              className="hero-logo"
-              priority
-              unoptimized
-            />
             <h1 className="hero-title">
               Run With
               <br />
