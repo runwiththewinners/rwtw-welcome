@@ -32,7 +32,7 @@ export default async function WelcomePage({
         Object.entries(PRODUCTS).map(async ([key, productId]) => {
           try {
             const memberships = await whopsdk.memberships.list({
-              user_id: userId,
+              user_ids: [userId],
               product_id: productId,
               valid: true,
             });
