@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { whopsdk } from "@/lib/whop-sdk";
 import WelcomeClient from "./WelcomeClient";
 
@@ -10,10 +11,8 @@ const PRODUCTS = {
 
 export default async function WelcomePage({
   params,
-  searchParams,
 }: {
   params: { experienceId: string };
-  searchParams: { [key: string]: string | string[] | undefined };
 }) {
   let access = {
     maxbet: false,
@@ -24,19 +23,17 @@ export default async function WelcomePage({
   let authenticated = false;
 
   try {
-    // Try to get the user from Whop headers
-    const user = await whopsdk.verifyToken(params.experienceId);
-    if (user) {
+    const { userId } = await whopsdk.verifyUserToken(await headers());
+    if (userId) {
       authenticated = true;
-      // Check access for each product
+
       const checks = await Promise.allSettled(
         Object.entries(PRODUCTS).map(async ([key, productId]) => {
           try {
-            const hasAccess = await whopsdk.checkUserAccess({
-              userId: user.userId,
-              productId,
+            const result = await whopsdk.users.checkAccess(params.experienceId, {
+              id: userId,
             });
-            return { key, hasAccess: !!hasAccess };
+            return { key, hasAccess: !!result };
           } catch {
             return { key, hasAccess: false };
           }
@@ -51,7 +48,6 @@ export default async function WelcomePage({
       });
     }
   } catch (e) {
-    // Not authenticated or error - show default state
     console.log("Auth check failed:", e);
   }
 
