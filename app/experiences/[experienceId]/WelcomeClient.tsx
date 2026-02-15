@@ -75,11 +75,6 @@ export default function WelcomeClient({
               priority
               unoptimized
             />
-            <h1 className="hero-title">
-              Run With
-              <br />
-              The <span className="gold">Winners</span>
-            </h1>
             <p className="hero-sub">
               You just made the best decision of your betting career.
             </p>
