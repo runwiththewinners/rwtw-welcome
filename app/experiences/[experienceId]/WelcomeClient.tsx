@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface AccessState {
   maxbet: boolean;
@@ -24,6 +24,60 @@ export default function WelcomeClient({
   authenticated: boolean;
 }) {
   const cardsRef = useRef<HTMLDivElement>(null);
+  const [displayedWinnings, setDisplayedWinnings] = useState(0);
+
+  // Calculate community winnings: starts at $5,382,923.04 on Feb 15, 2026
+  // Each night it increases by a pseudo-random amount between $1,200 and $4,800
+  useEffect(() => {
+    const BASE_DATE = new Date("2026-02-15T00:00:00Z");
+    const BASE_AMOUNT = 5382923.04;
+
+    // Seeded random based on day number for consistency
+    function seededRandom(seed: number) {
+      const x = Math.sin(seed * 9301 + 49297) * 49297;
+      return x - Math.floor(x);
+    }
+
+    const now = new Date();
+    const daysSinceBase = Math.max(
+      0,
+      Math.floor(
+        (now.getTime() - BASE_DATE.getTime()) / (1000 * 60 * 60 * 24)
+      )
+    );
+
+    let total = BASE_AMOUNT;
+    for (let d = 0; d < daysSinceBase; d++) {
+      // Each day adds between $1,200 and $4,800
+      const dailyGain = 1200 + seededRandom(d + 1) * 3600;
+      total += dailyGain;
+    }
+
+    const targetAmount = parseFloat(total.toFixed(2));
+
+    // Animate counting up from 0 to target
+    const duration = 2000; // 2 seconds
+    const startTime = Date.now();
+    const startVal = 0;
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = startVal + (targetAmount - startVal) * eased;
+      setDisplayedWinnings(current);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplayedWinnings(targetAmount);
+      }
+    };
+
+    // Small delay so it animates after page load
+    const timeout = setTimeout(() => requestAnimationFrame(animate), 600);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const cards = cardsRef.current?.querySelectorAll<HTMLElement>(".tier");
@@ -54,6 +108,10 @@ export default function WelcomeClient({
     <>
       <style>{styles}</style>
       <div className="page-wrap">
+        {/* Ambient bg effects */}
+        <div className="ambient" aria-hidden="true" />
+        <div className="noise" aria-hidden="true" />
+
         <div className="content">
           {/* Hero */}
           <header className="hero">
@@ -69,6 +127,15 @@ export default function WelcomeClient({
             <p className="hero-sub">
               You just made the best decision of your betting career.
             </p>
+            <div className="community-winnings" style={{ animationDelay: "0.25s" }}>
+              <span className="winnings-label">Total Community Winnings</span>
+              <span className="winnings-amount">
+                ${displayedWinnings.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
             <div className="scroll-cue" aria-hidden="true">
               <div className="scroll-line" />
             </div>
@@ -85,20 +152,17 @@ export default function WelcomeClient({
               icon="💎"
               label="Premium"
               tierClass="tier-premium"
-              priceTag="Starting at $29.99"
+              priceTag="Starting at $39.99"
               description={
                 <>
-                  All daily plays plus the{" "}
+                  All daily plays across every sport plus the{" "}
                   <strong>Max Bet Play Of The Day</strong> included every single
-                  day — that&apos;s a $49.99/day pick built into your sub.
+                  day — that&apos;s a $24.99/day pick built into your sub.
                 </>
               }
               prices={[
-                "$29.99 / 2 Days",
-                "$59.99 / Week",
-                "$119.99 / Month",
-                "$279.99 / 3 Months",
-                "$1,999.99 / Lifetime",
+                "$39.99 / Week",
+                "$79.99 / Month",
               ]}
               subscribed={access.premium}
               authenticated={authenticated}
@@ -111,15 +175,15 @@ export default function WelcomeClient({
               label="High Rollers"
               tierClass="tier-highrollers"
               featured
-              priceTag="Starting at $149.99"
+              priceTag="$249.99 / Month"
               description={
                 <>
                   The top tier. <strong>EVERYTHING</strong> included — all plays,
-                  Max Bet POTD, AND Player Props. If you&apos;re serious about
+                  Max Bet POTD, AND the full Player Props package. If you&apos;re serious about
                   this, this is where you belong.
                 </>
               }
-              prices={["$149.99 / Week", "$399.99 / Month"]}
+              prices={["$249.99 / Month"]}
               subscribed={access.highrollers}
               authenticated={authenticated}
               checkoutUrl={CHECKOUT_URLS.highrollers}
@@ -130,7 +194,7 @@ export default function WelcomeClient({
               icon="🔥"
               label="Max Bet Play of the Day"
               tierClass="tier-maxbet"
-              priceTag="$49.99 One-Time"
+              priceTag="$24.99 One-Time"
               description={
                 <>
                   Our highest-conviction, most researched pick of the day. One
@@ -140,24 +204,23 @@ export default function WelcomeClient({
               subscribed={access.maxbet}
               authenticated={authenticated}
               checkoutUrl={CHECKOUT_URLS.maxbet}
-              btnText="Get Max Bet Play of the Day — $49.99"
+              btnText="Get Max Bet Play of the Day — $24.99"
               delay={2}
             />
             <TierCard
               icon="🎯"
               label="Player Props"
               tierClass="tier-props"
-              priceTag="Starting at $9.99"
+              priceTag="Starting at $19.99"
               description={
                 <>
-                  Brand new. <strong>Daily player prop picks</strong> with full
-                  analysis. If you&apos;re a props bettor, this is your lane.
+                  Brand new. <strong>Daily player prop picks</strong> powered by
+                  ChalkBoard with full analysis. If you&apos;re a props bettor, this is your lane.
                 </>
               }
               prices={[
-                "$9.99 / Day",
-                "$29.99 / Week",
-                "$59.99 / Month",
+                "$19.99 / Week",
+                "$49.99 / Month",
               ]}
               subscribed={access.props}
               authenticated={authenticated}
@@ -271,47 +334,42 @@ const styles = `
 /* === Reset === */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
-/* === Vars — Dark mode (default) === */
+/* === Vars === */
 :root{
+  --bg:#07080c;
   --gold:#d4a843;--gold-hi:#f0c95c;--gold-lo:#a07c2e;
   --fire:#e8522a;--fire-hi:#ff7043;
   --blue:#4ea8f6;--blue-hi:#6dc0ff;
   --purple:#a855f7;--purple-hi:#c084fc;
-  --txt:#f5f1eb;
+  --txt:rgba(245,241,235,1);
   --txt2:rgba(245,241,235,.55);
   --txt3:rgba(245,241,235,.3);
-  --border:rgba(255,255,255,.08);
-  --glass:rgba(255,255,255,.03);
-  --card-bg:rgba(255,255,255,.03);
-  --card-hover:rgba(255,255,255,.06);
-  --pill-bg:rgba(255,255,255,.05);
-  --pill-border:rgba(255,255,255,.08);
-  --strong:rgba(255,255,255,.85);
-}
-
-/* === Light mode overrides === */
-@media(prefers-color-scheme:light){
-  :root{
-    --txt:#1a1a1a;
-    --txt2:rgba(26,26,26,.6);
-    --txt3:rgba(26,26,26,.35);
-    --border:rgba(0,0,0,.1);
-    --glass:rgba(0,0,0,.03);
-    --card-bg:rgba(0,0,0,.03);
-    --card-hover:rgba(0,0,0,.06);
-    --pill-bg:rgba(0,0,0,.04);
-    --pill-border:rgba(0,0,0,.08);
-    --strong:rgba(0,0,0,.85);
-  }
+  --border:rgba(255,255,255,.06);
+  --glass:rgba(255,255,255,.025);
 }
 
 /* === Page === */
 .page-wrap{
-  position:relative;min-height:100vh;
+  position:relative;background:var(--bg);min-height:100vh;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
   font-family:'DM Sans','Barlow',system-ui,sans-serif;
   color:var(--txt);
 }
+
+/* === Ambient === */
+.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.ambient::before{content:'';position:absolute;top:-35%;left:-15%;width:70vw;height:70vw;
+  background:radial-gradient(circle,rgba(212,168,67,.06)0%,transparent 55%);
+  animation:drift 22s ease-in-out infinite alternate}
+.ambient::after{content:'';position:absolute;bottom:-25%;right:-10%;width:60vw;height:60vw;
+  background:radial-gradient(circle,rgba(232,82,42,.035)0%,transparent 55%);
+  animation:drift 28s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0)scale(1)}to{transform:translate(4%,6%)scale(1.08)}}
+
+/* === Noise === */
+.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.3;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size:180px}
 
 /* === Content === */
 .content{position:relative;z-index:2;max-width:720px;margin:0 auto;padding:0 20px}
@@ -334,6 +392,13 @@ const styles = `
 }
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 
+.hero-logo{
+  width:clamp(100px,22vw,160px)!important;height:auto!important;
+  margin-bottom:20px;
+  filter:drop-shadow(0 0 30px rgba(212,168,67,.2));
+  animation:fadeUp .7s ease .05s both;
+}
+
 .hero-title{
   font-family:'Bebas Neue','Oswald',sans-serif;
   font-size:clamp(4.5rem,14vw,9rem);line-height:.88;letter-spacing:-1px;
@@ -353,22 +418,56 @@ const styles = `
   margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:6px;
   animation:fadeUp .7s ease .35s both;
 }
-.scroll-line{width:1px;height:36px;background:linear-gradient(to bottom,var(--gold),transparent);animation:scrollBob 2.2s ease-in-out infinite}
+
+/* === Community Winnings === */
+.community-winnings{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-top:28px;padding:18px 32px;border-radius:14px;
+  background:linear-gradient(165deg,rgba(212,168,67,.06),rgba(212,168,67,.02));
+  border:1px solid rgba(212,168,67,.12);
+  backdrop-filter:blur(10px);
+  animation:fadeUp .7s ease both;
+  position:relative;overflow:hidden;
+}
+.community-winnings::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.6;
+}
+.community-winnings::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(212,168,67,.08)0%,transparent 60%);
+  pointer-events:none;
+}
+.winnings-label{
+  font-size:9.5px;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);opacity:.7;
+}
+.winnings-amount{
+  font-family:'Bebas Neue','Oswald',sans-serif;
+  font-size:clamp(2rem,7vw,3.2rem);line-height:1;letter-spacing:1px;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold),var(--gold-lo));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(212,168,67,.15));
+}
+.scroll-cue span{font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--txt3)}
+.scroll-line{width:2.5px;height:36px;border-radius:2px;background:linear-gradient(to bottom,var(--gold),transparent);animation:scrollBob 2.2s ease-in-out infinite}
 @keyframes scrollBob{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(8px);opacity:1}}
 
 /* === Section label === */
 .section-label{text-align:center;margin-bottom:24px}
 .label-accent{
-  font-size:10.5px;font-weight:600;letter-spacing:4px;text-transform:uppercase;
+  font-size:15px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
   color:var(--gold);
 }
 
 /* === Tier cards === */
-.tiers{display:flex;flex-direction:column;gap:16px;padding-bottom:20px}
+.tiers{display:flex;flex-direction:column;gap:16px;padding-bottom:8px}
 
 .tier{
   position:relative;border-radius:16px;padding:28px 28px 24px;
-  background:var(--card-bg);border:1px solid var(--border);
+  background:var(--glass);border:1px solid var(--border);
   backdrop-filter:blur(16px);overflow:hidden;
   transition:border-color .35s ease,transform .35s cubic-bezier(.16,1,.3,1),background .35s ease;
   animation:fadeUp .6s ease both;
@@ -380,7 +479,7 @@ const styles = `
   pointer-events:none;opacity:0;transition:opacity .4s ease;
 }
 .tier:hover::after{opacity:1}
-.tier:hover{transform:translateY(-3px);border-color:var(--border)}
+.tier:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.1)}
 
 /* Top accent line */
 .tier::before{
@@ -397,16 +496,16 @@ const styles = `
 .tier-highrollers{--accent:var(--gold-hi)}
 
 /* Featured */
-.tier-featured{border-color:rgba(212,168,67,.15);background:var(--card-bg)}
+.tier-featured{border-color:rgba(212,168,67,.12);background:linear-gradient(165deg,rgba(212,168,67,.04),var(--glass))}
 .featured-tag{
   position:absolute;top:14px;right:14px;
   font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
   padding:4px 10px;border-radius:6px;
-  background:linear-gradient(135deg,var(--gold),var(--gold-lo));color:#0a0a0a;
+  background:linear-gradient(135deg,var(--gold),var(--gold-lo));color:var(--bg);
 }
 
 /* Subscribed ring */
-.tier-subscribed{border-color:rgba(74,222,128,.25)!important}
+.tier-subscribed{border-color:rgba(74,222,128,.2)!important}
 .tier-subscribed::before{background:linear-gradient(90deg,transparent,#4ade80,transparent)!important;opacity:1!important}
 
 /* Head */
@@ -414,7 +513,7 @@ const styles = `
 .tier-icon{
   width:44px;height:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;font-size:20px;
-  background:var(--glass);border:1px solid var(--border);flex-shrink:0;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);flex-shrink:0;
 }
 .tier-maxbet .tier-icon{background:rgba(232,82,42,.08);border-color:rgba(232,82,42,.15)}
 .tier-premium .tier-icon{background:rgba(78,168,246,.08);border-color:rgba(78,168,246,.15)}
@@ -430,17 +529,17 @@ const styles = `
 
 /* Desc */
 .tier-desc{font-size:13.5px;line-height:1.6;color:var(--txt2);margin-bottom:14px}
-.tier-desc strong{color:var(--strong);font-weight:600}
+.tier-desc strong{color:rgba(255,255,255,.82);font-weight:600}
 
 /* Prices */
 .prices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
 .price-pill{
   font-size:11px;font-weight:600;letter-spacing:.4px;
   padding:5px 11px;border-radius:7px;
-  background:var(--pill-bg);border:1px solid var(--pill-border);
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
   color:var(--txt2);
 }
-.price-pill .amt{color:var(--strong);font-weight:700}
+.price-pill .amt{color:rgba(255,255,255,.85);font-weight:700}
 
 /* CTA */
 .btn-wrap{margin-top:2px}
@@ -454,12 +553,12 @@ const styles = `
 }
 .tier-btn:hover{
   background:var(--accent,var(--gold));border-color:var(--accent,var(--gold));
-  color:#0a0a0a;transform:scale(1.015);
+  color:var(--bg);transform:scale(1.015);
 }
 /* Featured CTA filled by default */
 .tier-featured .tier-btn{
   background:linear-gradient(135deg,var(--gold),var(--gold-lo));
-  border-color:var(--gold);color:#0a0a0a;
+  border-color:var(--gold);color:var(--bg);
 }
 .tier-featured .tier-btn:hover{
   background:linear-gradient(135deg,var(--gold-hi),var(--gold));
@@ -508,11 +607,11 @@ const styles = `
 }
 
 /* === Footer / Closer === */
-.closer{text-align:center;padding:60px 0 80px}
-.closer-rule{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 28px}
+.closer{text-align:center;padding:20px 0 60px}
+.closer-rule{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:14px auto}
 .closer-line{
   font-family:'Oswald',sans-serif;font-weight:500;font-size:clamp(1rem,2.5vw,1.4rem);
-  text-transform:uppercase;letter-spacing:4px;color:var(--txt3);line-height:1.8;
+  text-transform:uppercase;letter-spacing:4px;color:var(--txt);line-height:1.8;
 }
 .closer-main{
   font-family:'Bebas Neue','Oswald',sans-serif;
