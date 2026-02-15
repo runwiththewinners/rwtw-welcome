@@ -295,7 +295,7 @@ const styles = `
 }
 
 /* === Page === */
-.page-wrap{
+html,body,.page-wrap{background:#000!important}.page-wrap{
   position:relative;background:var(--bg);min-height:100vh;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
   font-family:'DM Sans','Barlow',system-ui,sans-serif;
