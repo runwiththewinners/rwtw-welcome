@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { whopsdk } from "@/lib/whop-sdk";
 import WelcomeClient from "./WelcomeClient";
 
-const PRODUCTS = {
+const PRODUCTS: Record<string, string> = {
   maxbet: "prod_12U89lKiPpVxP",
   premium: "prod_o1jjamUG8rP8W",
   props: "prod_RYRii4L26sK9m",
@@ -27,13 +27,17 @@ export default async function WelcomePage({
     if (userId) {
       authenticated = true;
 
+      // Check each product individually
       const checks = await Promise.allSettled(
         Object.entries(PRODUCTS).map(async ([key, productId]) => {
           try {
-            const result = await whopsdk.users.checkAccess(params.experienceId, {
-              id: userId,
+            const memberships = await whopsdk.memberships.list({
+              user_id: userId,
+              product_id: productId,
+              valid: true,
             });
-            return { key, hasAccess: !!result };
+            const hasAccess = memberships.data && memberships.data.length > 0;
+            return { key, hasAccess };
           } catch {
             return { key, hasAccess: false };
           }
@@ -48,6 +52,7 @@ export default async function WelcomePage({
       });
     }
   } catch (e) {
+    // Not authenticated — show default state with all purchase links
     console.log("Auth check failed:", e);
   }
 
