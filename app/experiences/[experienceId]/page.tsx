@@ -9,16 +9,11 @@ const PRODUCTS: Record<string, string> = {
   highrollers: "prod_bNsUIqwSfzLzU",
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function ExperiencePage({
+export default async function WelcomePage({
   params,
 }: {
-  params: Promise<{ experienceId: string }>;
+  params: { experienceId: string };
 }) {
-  const { experienceId } = await params;
-  const headersList = await headers();
-
   let access = {
     maxbet: false,
     premium: false,
@@ -28,40 +23,37 @@ export default async function ExperiencePage({
   let authenticated = false;
 
   try {
-    const result = await whopsdk.verifyUserToken(headersList, {
-      dontThrow: true,
-    });
-    const userId = (result as any)?.userId ?? null;
-
-    console.log("[RWTW] verifyResult:", JSON.stringify(result));
-    console.log("[RWTW] userId:", userId);
-    console.log("[RWTW] experienceId:", experienceId);
-
+    const { userId } = await whopsdk.verifyUserToken(await headers());
     if (userId) {
       authenticated = true;
 
-      const results = await Promise.all(
-        Object.entries(PRODUCTS).map(async ([key, prodId]) => {
+      // Check each product individually
+      const checks = await Promise.allSettled(
+        Object.entries(PRODUCTS).map(async ([key, productId]) => {
           try {
-            const response = await whopsdk.users.checkAccess(prodId, {
-              id: userId,
+            const memberships = await whopsdk.memberships.list({
+              user_ids: [userId],
+              product_ids: [productId],
             });
-            console.log(`[RWTW] ${key} (${prodId}):`, JSON.stringify(response));
-            return [key, response.has_access === true] as [string, boolean];
-          } catch (e) {
-            console.error(`[RWTW] Error checking ${key}:`, e);
-            return [key, false] as [string, boolean];
+            const hasAccess = memberships.data && memberships.data.length > 0;
+            return { key, hasAccess };
+          } catch {
+            return { key, hasAccess: false };
           }
         })
       );
 
-      access = Object.fromEntries(results) as typeof access;
+      checks.forEach((result) => {
+        if (result.status === "fulfilled") {
+          access[result.value.key as keyof typeof access] =
+            result.value.hasAccess;
+        }
+      });
     }
   } catch (e) {
-    console.error("[RWTW] Auth error:", e);
+    // Not authenticated — show default state with all purchase links
+    console.log("Auth check failed:", e);
   }
-
-  console.log("[RWTW] Final access:", JSON.stringify(access));
 
   return <WelcomeClient access={access} authenticated={authenticated} />;
 }
