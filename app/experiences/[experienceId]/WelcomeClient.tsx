@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 
 interface AccessState {
   maxbet: boolean;
@@ -55,10 +54,6 @@ export default function WelcomeClient({
     <>
       <style>{styles}</style>
       <div className="page-wrap">
-        {/* Ambient bg effects */}
-        <div className="ambient" aria-hidden="true" />
-        <div className="noise" aria-hidden="true" />
-
         <div className="content">
           {/* Hero */}
           <header className="hero">
@@ -66,15 +61,11 @@ export default function WelcomeClient({
               <span className="badge-dot" />
               Live Picks Daily
             </div>
-            <Image
-              src="/logo.png"
-              alt=""
-              width={220}
-              height={220}
-              className="hero-logo"
-              priority
-              unoptimized
-            />
+            <h1 className="hero-title">
+              Run With
+              <br />
+              The <span className="gold">Winners</span>
+            </h1>
             <p className="hero-sub">
               You just made the best decision of your betting career.
             </p>
@@ -280,42 +271,47 @@ const styles = `
 /* === Reset === */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
-/* === Vars === */
+/* === Vars — Dark mode (default) === */
 :root{
-  --bg:transparent;
   --gold:#d4a843;--gold-hi:#f0c95c;--gold-lo:#a07c2e;
   --fire:#e8522a;--fire-hi:#ff7043;
   --blue:#4ea8f6;--blue-hi:#6dc0ff;
   --purple:#a855f7;--purple-hi:#c084fc;
-  --txt:rgba(245,241,235,1);
+  --txt:#f5f1eb;
   --txt2:rgba(245,241,235,.55);
   --txt3:rgba(245,241,235,.3);
-  --border:rgba(255,255,255,.06);
-  --glass:rgba(255,255,255,.025);
+  --border:rgba(255,255,255,.08);
+  --glass:rgba(255,255,255,.03);
+  --card-bg:rgba(255,255,255,.03);
+  --card-hover:rgba(255,255,255,.06);
+  --pill-bg:rgba(255,255,255,.05);
+  --pill-border:rgba(255,255,255,.08);
+  --strong:rgba(255,255,255,.85);
+}
+
+/* === Light mode overrides === */
+@media(prefers-color-scheme:light){
+  :root{
+    --txt:#1a1a1a;
+    --txt2:rgba(26,26,26,.6);
+    --txt3:rgba(26,26,26,.35);
+    --border:rgba(0,0,0,.1);
+    --glass:rgba(0,0,0,.03);
+    --card-bg:rgba(0,0,0,.03);
+    --card-hover:rgba(0,0,0,.06);
+    --pill-bg:rgba(0,0,0,.04);
+    --pill-border:rgba(0,0,0,.08);
+    --strong:rgba(0,0,0,.85);
+  }
 }
 
 /* === Page === */
 .page-wrap{
-  position:relative;background:var(--bg);min-height:100vh;
+  position:relative;min-height:100vh;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
   font-family:'DM Sans','Barlow',system-ui,sans-serif;
   color:var(--txt);
 }
-
-/* === Ambient === */
-.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.ambient::before{content:'';position:absolute;top:-35%;left:-15%;width:70vw;height:70vw;
-  background:radial-gradient(circle,rgba(212,168,67,.06)0%,transparent 55%);
-  animation:drift 22s ease-in-out infinite alternate}
-.ambient::after{content:'';position:absolute;bottom:-25%;right:-10%;width:60vw;height:60vw;
-  background:radial-gradient(circle,rgba(232,82,42,.035)0%,transparent 55%);
-  animation:drift 28s ease-in-out infinite alternate-reverse}
-@keyframes drift{from{transform:translate(0,0)scale(1)}to{transform:translate(4%,6%)scale(1.08)}}
-
-/* === Noise === */
-.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.3;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  background-size:180px}
 
 /* === Content === */
 .content{position:relative;z-index:2;max-width:720px;margin:0 auto;padding:0 20px}
@@ -338,13 +334,6 @@ const styles = `
 }
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 
-.hero-logo{
-  width:clamp(100px,22vw,160px)!important;height:auto!important;
-  margin-bottom:24px;
-  filter:drop-shadow(0 0 30px rgba(212,168,67,.2));
-  animation:fadeUp .7s ease .05s both;
-}
-
 .hero-title{
   font-family:'Bebas Neue','Oswald',sans-serif;
   font-size:clamp(4.5rem,14vw,9rem);line-height:.88;letter-spacing:-1px;
@@ -364,7 +353,6 @@ const styles = `
   margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:6px;
   animation:fadeUp .7s ease .35s both;
 }
-.scroll-cue span{font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--txt3)}
 .scroll-line{width:1px;height:36px;background:linear-gradient(to bottom,var(--gold),transparent);animation:scrollBob 2.2s ease-in-out infinite}
 @keyframes scrollBob{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(8px);opacity:1}}
 
@@ -380,7 +368,7 @@ const styles = `
 
 .tier{
   position:relative;border-radius:16px;padding:28px 28px 24px;
-  background:var(--glass);border:1px solid var(--border);
+  background:var(--card-bg);border:1px solid var(--border);
   backdrop-filter:blur(16px);overflow:hidden;
   transition:border-color .35s ease,transform .35s cubic-bezier(.16,1,.3,1),background .35s ease;
   animation:fadeUp .6s ease both;
@@ -392,7 +380,7 @@ const styles = `
   pointer-events:none;opacity:0;transition:opacity .4s ease;
 }
 .tier:hover::after{opacity:1}
-.tier:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.1)}
+.tier:hover{transform:translateY(-3px);border-color:var(--border)}
 
 /* Top accent line */
 .tier::before{
@@ -409,16 +397,16 @@ const styles = `
 .tier-highrollers{--accent:var(--gold-hi)}
 
 /* Featured */
-.tier-featured{border-color:rgba(212,168,67,.12);background:linear-gradient(165deg,rgba(212,168,67,.04),var(--glass))}
+.tier-featured{border-color:rgba(212,168,67,.15);background:var(--card-bg)}
 .featured-tag{
   position:absolute;top:14px;right:14px;
   font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
   padding:4px 10px;border-radius:6px;
-  background:linear-gradient(135deg,var(--gold),var(--gold-lo));color:var(--bg);
+  background:linear-gradient(135deg,var(--gold),var(--gold-lo));color:#0a0a0a;
 }
 
 /* Subscribed ring */
-.tier-subscribed{border-color:rgba(74,222,128,.2)!important}
+.tier-subscribed{border-color:rgba(74,222,128,.25)!important}
 .tier-subscribed::before{background:linear-gradient(90deg,transparent,#4ade80,transparent)!important;opacity:1!important}
 
 /* Head */
@@ -426,7 +414,7 @@ const styles = `
 .tier-icon{
   width:44px;height:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;font-size:20px;
-  background:rgba(255,255,255,.03);border:1px solid var(--border);flex-shrink:0;
+  background:var(--glass);border:1px solid var(--border);flex-shrink:0;
 }
 .tier-maxbet .tier-icon{background:rgba(232,82,42,.08);border-color:rgba(232,82,42,.15)}
 .tier-premium .tier-icon{background:rgba(78,168,246,.08);border-color:rgba(78,168,246,.15)}
@@ -442,17 +430,17 @@ const styles = `
 
 /* Desc */
 .tier-desc{font-size:13.5px;line-height:1.6;color:var(--txt2);margin-bottom:14px}
-.tier-desc strong{color:rgba(255,255,255,.82);font-weight:600}
+.tier-desc strong{color:var(--strong);font-weight:600}
 
 /* Prices */
 .prices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
 .price-pill{
   font-size:11px;font-weight:600;letter-spacing:.4px;
   padding:5px 11px;border-radius:7px;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  background:var(--pill-bg);border:1px solid var(--pill-border);
   color:var(--txt2);
 }
-.price-pill .amt{color:rgba(255,255,255,.85);font-weight:700}
+.price-pill .amt{color:var(--strong);font-weight:700}
 
 /* CTA */
 .btn-wrap{margin-top:2px}
@@ -466,12 +454,12 @@ const styles = `
 }
 .tier-btn:hover{
   background:var(--accent,var(--gold));border-color:var(--accent,var(--gold));
-  color:var(--bg);transform:scale(1.015);
+  color:#0a0a0a;transform:scale(1.015);
 }
 /* Featured CTA filled by default */
 .tier-featured .tier-btn{
   background:linear-gradient(135deg,var(--gold),var(--gold-lo));
-  border-color:var(--gold);color:var(--bg);
+  border-color:var(--gold);color:#0a0a0a;
 }
 .tier-featured .tier-btn:hover{
   background:linear-gradient(135deg,var(--gold-hi),var(--gold));
