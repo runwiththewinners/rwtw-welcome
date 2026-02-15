@@ -34,7 +34,6 @@ export default async function WelcomePage({
             const memberships = await whopsdk.memberships.list({
               user_ids: [userId],
               product_ids: [productId],
-              valid: true,
             });
             const hasAccess = memberships.data && memberships.data.length > 0;
             return { key, hasAccess };
